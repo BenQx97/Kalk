@@ -97,7 +97,7 @@ stringstream ss;
 string query;
 
 void BazaPortfel();
-
+void ZaladujPortfelBaza();
 void BazaRanking();
 char RDK1[10],RDK2[10],RDT1[20],RDT2[20],RWK1[10],RWK2[10],RWT1[20],RWT2[20];
 
@@ -312,13 +312,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
                             string query = ss.str();
                             const char* q = query.c_str();
                             qstate = mysql_query(conn,q);
-                            if(qstate == 0)
-                            cout<<"inserted";
-                            else
-                            cout<<"inserted failure";
-
                             //
-                            BazaPortfel();
+
                             //
                             liczba_klikow_D++;
                             portfel_f = atof(portfel);
@@ -329,6 +324,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
                             DodajDochod();
                             ZapisDochody();
                             ZapisPortfel();
+                            BazaPortfel();
                             break;
                             }
 
@@ -377,11 +373,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
                             string query = ss.str();
                             const char* q = query.c_str();
                             qstate = mysql_query(conn,q);
-                            if(qstate == 0)
-                            cout<<"inserted";
-                            else
-                            cout<<"inserted failure";
-                        //
+
                         liczba_klikow_W++;
                         portfel_f = atof(portfel);                                                 // U¿ycie funkcji atof na Stanie Portfela w celu zamiany znaków cyfr na cyfry, aby móc liczyæ
                         zmiana_f = atof(zmiana);                                                   // U¿ycie funkcji atof na Kwocie
@@ -391,6 +383,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
                         DodajWydatek();
                         ZapisWydatki();
                         ZapisPortfel();
+                        BazaPortfel();
                         break;
                         }
 
@@ -404,9 +397,22 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
 
 
                 case WYCZYSC_PORTFEL:
-                    portfel_f = 0;
-                    sprintf(portfel,"%.2f",portfel_f);
-                    SetWindowText(hStan, portfel);
+                    int wynik;
+                    wynik = MessageBox(hWnd,"Czy napewno chcesz wyczyscic portfel?\nSpowoduje to usuniecie wszystkich danych!","Kalkulator wydatkow",MB_YESNO);
+                    if(wynik == IDYES)
+                    {
+                        portfel_f = 0;
+                        sprintf(portfel,"%.2f",portfel_f);
+                        SetWindowText(hStan, portfel);
+                        qstate = mysql_query(conn,"UPDATE Portfel SET Stan = 0");
+                        mysql_close(conn);
+//                        conn = mysql_init(0);
+//                        conn = mysql_real_connect(conn,server,username,password,dataBaseName,port,NULL,0);
+
+                    }
+                    else
+                        break;
+
                     break;
 
 
@@ -424,7 +430,8 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
             DodajMenu(hWnd);
             DodajKontrolki(hWnd);
             time();
-            PokazPortfel();
+            ZaladujPortfelBaza();
+//            PokazPortfel();
             PokazDochodyHistoria();
             PokazDochodyTytulyHistoria();
             PokazWydatkiHistoria();
@@ -570,20 +577,20 @@ void ZapisPortfel()
     plik_portfel.close();
 }
 
-void PokazPortfel()
-{
-    fstream plik_portfel;
-    plik_portfel.open("0Stan Konta.txt", ios::in);
-    if(plik_portfel.good()== false)
-    {
-        cout << "Nie mozna zaladowac stanu konta!" <<endl;
-    }
-    else
-    {
-            plik_portfel >> portfel;
-            SetWindowText(hStan, portfel);
-    }
-}
+//void PokazPortfel()
+//{
+//    fstream plik_portfel;
+//    plik_portfel.open("0Stan Konta.txt", ios::in);
+//    if(plik_portfel.good()== false)
+//    {
+//        cout << "Nie mozna zaladowac stanu konta!" <<endl;
+//    }
+//    else
+//    {
+//            plik_portfel >> portfel;
+//            SetWindowText(hStan, portfel);
+//    }
+//}
 
 void ZapisDochodyHistoria()
 {
@@ -981,8 +988,8 @@ void PokazRanking(HWND hWnd)
 {
     HWND hRanking = CreateWindowW(L"MojRankingKlasa",L"RANKING", WS_VISIBLE | WS_OVERLAPPEDWINDOW, 400, 100, 520, 200, hWnd, NULL, NULL, NULL);
     int y=60;
-    oknoRDK[0] = CreateWindowW(L"Static", L"TOP Dochód",  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 77.5, 20, 100, 25, hRanking, NULL, NULL,NULL);
-    oknoRWK[0] = CreateWindowW(L"Static", L"TOP Wydatek",  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 317.5, 20, 100, 25, hRanking, NULL, NULL,NULL);
+    oknoRDK[0] = CreateWindowW(L"Static", L"TOP Dochód",  WS_VISIBLE | WS_CHILD | SS_CENTER, 77.5, 20, 100, 25, hRanking, NULL, NULL,NULL);
+    oknoRWK[0] = CreateWindowW(L"Static", L"TOP Wydatek",  WS_VISIBLE | WS_CHILD | SS_CENTER, 317.5, 20, 100, 25, hRanking, NULL, NULL,NULL);
     for(int i=1;i<3;i++)
     {
 
@@ -997,43 +1004,6 @@ void PokazRanking(HWND hWnd)
 
 
 }
-
-//void ZapisRankingD()
-//{
-//    fstream plik_rankingd1;
-//    plik_rankingd1.open("rankingd1.txt",ios::out);
-//    if(plik_rankingd1.good()== false)
-//    {
-//        cout << "Nie mozna zaladowac 1st rank!" <<endl;
-//    }
-//    else
-//    {
-//    GetWindowText(hWartosc,zmiennaRD1,10);
-//    plik_rankingd1>>zmiennaRD0;
-//    if(zmiennaRD0 == NULL)
-//    {
-//        ranking_f0 = 0;
-//    }
-//    else
-//    {
-//    ranking_f0 = atof(zmiennaRD0);
-//    }
-//
-//    ranking_f1 = atof(zmiennaRD1);
-//    if(ranking_f0<ranking_f1)
-//    {
-//        plik_rankingd1<<zmiennaRD1<<endl;
-//    }
-//    }
-
-///////////////////////////
-
-
-
-
-
-
-//}
 
 //////////////////
 //void ZapisWydatkiTytulyHistoria()
@@ -1136,27 +1106,81 @@ void Baza()
 
 void BazaPortfel()
 {
-                            string zd(zmiana);
-                            cout <<zd<<endl;
+    if(conn)
+    {
+
+
+
+   // GetWindowText(hStan,portfel,10);
+
+    string portfelik(portfel);
+
+                            cout<<portfelik<<endl;
                             ss.str(string());
-                            ss<<"UPDATE Portfel SET Stan ="  + zd + "where stanid = 1;";
+                            ss<<"UPDATE Portfel SET Stan = "+ portfelik +" WHERE idStan = 1;";
                             string query = ss.str();
                             const char* q = query.c_str();
                             qstate = mysql_query(conn,q);
                             if(qstate == 0)
-                            cout<<"inserted portfel";
+                            cout<<"updated portfel";
                             else
-                            cout<<"inserted portfel failure";
+                            cout<<"updated portfel failure";
+    }
+
                         //
 }
 
+void ZaladujPortfelBaza()
+{
+    if(conn)
+    {
+        qstate = mysql_query(conn,"SELECT Stan FROM Portfel");
+        if(!qstate) // nonzero
+    {
+        res = mysql_store_result(conn);
+        while(row=mysql_fetch_row(res))
+        {
+            char *portfel = row[0];
+            SetWindowText(hStan,portfel);
+
+        }
+    }
+    else
+    {
+      cout<<"Nie wczytano 1st Dochodu!"<<mysql_error(conn);
+    }
+}
+
+
+}
 
 
 void BazaPokazDochody()
 {
+    if(conn)
+    {
+        qstate = mysql_query(conn,"SELECT MAX(Kwota) FROM Dochody");
+        if(!qstate) // nonzero
+    {
+        res = mysql_store_result(conn);
+        while(row=mysql_fetch_row(res))
+        {
+            char *RDK1 = row[0];
+            SetWindowText(oknoRDK[1],RDK1);
+
+        }
+    }
+    else
+    {
+      cout<<"Nie wczytano 1st Dochodu!"<<mysql_error(conn);
+    }
+
+
+
+
+        qstate = mysql_query(conn,"SELECT MAX(Kwota) FROM Dochody WHERE Kwota < (SELECT Max(Kwota) FROM Dochody)");
 
 }
-
 void BazaRanking()
 {
 ///////////////////////////////////////////////
