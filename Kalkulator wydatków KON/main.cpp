@@ -162,7 +162,7 @@ char zmiennaD[20],zmiennaTD[20],zmiennaW[20],zmiennaTW[20];                     
 
 HWND oknoD[5], oknoW[5], oknoTD[5], oknoTW[5];                                              // ZMIENNE DO OKIEN HISTORII
 
-HWND oknoRD[5], oknoRW[5];
+HWND oknoRDK[5], oknoRWK[5],oknoRDT[5], oknoRWT[5];
 
 
 HWND hO2000N,hO2000T,hO10000N,hO10000T,hO50000N,hO50000T,hO100000N,hO100000T,hO1000000N,hO1000000T,hO5000000N,hO5000000T,hOwyd1,hOwyd2,hOwyd3;
@@ -259,6 +259,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
 
                 case MENU_RANKING:
                     PokazRanking(hWnd);
+                    BazaRanking();
                     break;
 
 
@@ -424,7 +425,6 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
             DodajKontrolki(hWnd);
             time();
             PokazPortfel();
-            BazaRanking();
             PokazDochodyHistoria();
             PokazDochodyTytulyHistoria();
             PokazWydatkiHistoria();
@@ -979,16 +979,18 @@ void registerRankingClass(HINSTANCE hInst)
 }
 void PokazRanking(HWND hWnd)
 {
-    HWND hRanking = CreateWindowW(L"MojRankingKlasa",L"RANKING", WS_VISIBLE | WS_OVERLAPPEDWINDOW, 400, 100, 300, 200, hWnd, NULL, NULL, NULL);
+    HWND hRanking = CreateWindowW(L"MojRankingKlasa",L"RANKING", WS_VISIBLE | WS_OVERLAPPEDWINDOW, 400, 100, 520, 200, hWnd, NULL, NULL, NULL);
     int y=60;
-    oknoRD[0] = CreateWindowW(L"Static", L"TOP Dochód",  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 20, 20, 100, 25, hRanking, NULL, NULL,NULL);
-    oknoRW[0] = CreateWindowW(L"Static", L"TOP Wydatek",  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 160, 20, 100, 25, hRanking, NULL, NULL,NULL);
+    oknoRDK[0] = CreateWindowW(L"Static", L"TOP Dochód",  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 77.5, 20, 100, 25, hRanking, NULL, NULL,NULL);
+    oknoRWK[0] = CreateWindowW(L"Static", L"TOP Wydatek",  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 317.5, 20, 100, 25, hRanking, NULL, NULL,NULL);
     for(int i=1;i<3;i++)
     {
 
-     oknoRD[i] = CreateWindowW(L"Static", NULL,  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 20, y, 100, 25, hRanking, NULL, NULL,NULL);
-     oknoRW[i] = CreateWindowW(L"Static", NULL,  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 160, y, 100, 25, hRanking, NULL, NULL,NULL);
-     y = y + 50;
+        oknoRDK[i] = CreateWindowW(L"Static", NULL,  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 20, y, 100, 25, hRanking, NULL, NULL,NULL);
+        oknoRDT[i] = CreateWindowW(L"Static", NULL,  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 135, y, 100, 25, hRanking, NULL, NULL,NULL);
+        oknoRWK[i] = CreateWindowW(L"Static", NULL,  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 260, y, 100, 25, hRanking, NULL, NULL,NULL);
+        oknoRWT[i] = CreateWindowW(L"Static", NULL,  WS_VISIBLE | WS_CHILD | WS_BORDER | SS_CENTER, 375, y, 100, 25, hRanking, NULL, NULL,NULL);
+        y = y + 50;
 
 
     }
@@ -1130,23 +1132,6 @@ void Baza()
     else
         cout<<"Nie polaczono z Baza Danych MySQL."<<endl;
 
-
-//    int qstate = 0;
-//    stringstream ss;
-//    float kwotaF = 90.50;
-//    string kwotaS = to_string(kwotaF);
-//    string tytul = "przelew";
-
-  //  ss<<"INSERT into Wydatki(Kwota,Tytul,Data) Values("+kwotaS+",\""+tytul+"\", NOW());";
- //   string query = ss.str();
-  //  const char* q = query.c_str();
-
-  //  qstate = mysql_query(conn,q);
-  //  if(qstate == 0)
-  //      cout<<"inserted";
-  //  else
-   //     cout<<"inserted failure";
-
 }
 
 void BazaPortfel()
@@ -1154,7 +1139,7 @@ void BazaPortfel()
                             string zd(zmiana);
                             cout <<zd<<endl;
                             ss.str(string());
-                            //"UPDATE Portfel SET Stan =" + "\"zd\"" + where id stan = 1;"
+                            ss<<"UPDATE Portfel SET Stan ="  + zd + "where stanid = 1;";
                             string query = ss.str();
                             const char* q = query.c_str();
                             qstate = mysql_query(conn,q);
@@ -1174,27 +1159,68 @@ void BazaPokazDochody()
 
 void BazaRanking()
 {
+///////////////////////////////////////////////
+//         RANKING KWOTA DOCHÓD
+//////////////////////////////////////////////
    if(conn)
     {
-        cout<<"Dostep do rankingu"<<endl;
+        qstate = mysql_query(conn,"SELECT MAX(Kwota) FROM Dochody");
+        if(!qstate) // nonzero
+    {
+        res = mysql_store_result(conn);
+        while(row=mysql_fetch_row(res))
+        {
+            char *RDK1 = row[0];
+            SetWindowText(oknoRDK[1],RDK1);
+
+        }
+    }
+    else
+    {
+      cout<<"Nie wczytano 1st Dochodu!"<<mysql_error(conn);
+    }
+
+
+
+
+        qstate = mysql_query(conn,"SELECT MAX(Kwota) FROM Dochody WHERE Kwota < (SELECT Max(Kwota) FROM Dochody)");
+
+    if(!qstate) // nonzero
+    {
+        res = mysql_store_result(conn);
+        while(row=mysql_fetch_row(res))
+        {
+
+            char *RDK2 = row[0];
+
+            SetWindowText(oknoRDK[2],RDK2);
+
+        }
+    }
+    else
+    {
+      cout<<"Nie wczytano 2st Dochodu!"<<mysql_error(conn);
+    }
+///////////////////////////////////////////
+//               RANKING KWOTA WYDATEK
+////////////////////////////////////////////
         qstate = mysql_query(conn,"SELECT MAX(Kwota) FROM Wydatki");
         if(!qstate) // nonzero
     {
         res = mysql_store_result(conn);
         while(row=mysql_fetch_row(res))
         {
-            //cout<<row[0]<<" "<<row[1]<<" "<<row[2]<<" "<<row[3]<<endl;
-            char *RD1 = row[0];
-            cout<<RD1<<endl;
+            char *RWK1 = row[0];
+            SetWindowText(oknoRWK[1],RWK1);
 
         }
     }
     else
     {
-      cout<<"execution problem!"<<mysql_error(conn);
+      cout<<"Nie wczytano 1st Wydatku!"<<mysql_error(conn);
     }
 
-    }
+
 
 
         qstate = mysql_query(conn,"SELECT MAX(Kwota) FROM Wydatki WHERE Kwota < (SELECT Max(Kwota) FROM Wydatki)");
@@ -1204,18 +1230,103 @@ void BazaRanking()
         res = mysql_store_result(conn);
         while(row=mysql_fetch_row(res))
         {
-            //cout<<row[0]<<" "<<row[1]<<" "<<row[2]<<" "<<row[3]<<endl;
-            char *kupa = row[0];
-            cout<<kupa<<endl;
+
+            char *RWK2 = row[0];
+
+            SetWindowText(oknoRWK[2],RWK2);
 
         }
     }
     else
     {
-      cout<<"execution problem!"<<mysql_error(conn);
+      cout<<"Nie wczytano 2st Wydatku!"<<mysql_error(conn);
     }
 
 
+
+
+
+//////////////////////////////////////////////////
+//                RANKING TYTUŁ DOCHÓD
+//////////////////////////////////////////////////
+    qstate = mysql_query(conn,"SELECT Tytul FROM Dochody WHERE Kwota = (SELECT MAX(Kwota) FROM Dochody)");
+        if(!qstate) // nonzero
+    {
+        res = mysql_store_result(conn);
+        while(row=mysql_fetch_row(res))
+        {
+            char *RDT1 = row[0];
+            SetWindowText(oknoRDT[1],RDT1);
+
+        }
+    }
+    else
+    {
+      cout<<"Nie wczytano Tytułu 1st Dochodu!"<<mysql_error(conn);
+    }
+
+
+
+
+        qstate = mysql_query(conn,"SELECT Tytul FROM Dochody WHERE Kwota = (SELECT MAX(Kwota) FROM Dochody WHERE Kwota < (SELECT Max(Kwota) FROM Dochody))");
+
+    if(!qstate) // nonzero
+    {
+        res = mysql_store_result(conn);
+        while(row=mysql_fetch_row(res))
+        {
+
+            char *RDT2 = row[0];
+
+            SetWindowText(oknoRDT[2],RDT2);
+
+        }
+    }
+    else
+    {
+      cout<<"Nie wczytano Tytułu 2st Dochodu!"<<mysql_error(conn);
+    }
+//////////////////////////////////////////////////
+//              RANKING TYTUŁ WYDATEK
+//////////////////////////////////////////////////
+qstate = mysql_query(conn,"SELECT Tytul FROM Wydatki WHERE Kwota = (SELECT MAX(Kwota) FROM Wydatki)");
+        if(!qstate) // nonzero
+    {
+        res = mysql_store_result(conn);
+        while(row=mysql_fetch_row(res))
+        {
+            char *RWT1 = row[0];
+            SetWindowText(oknoRWT[1],RWT1);
+
+        }
+    }
+    else
+    {
+      cout<<"Nie wczytano Tytułu 1st Wydatku!"<<mysql_error(conn);
+    }
+
+
+
+
+        qstate = mysql_query(conn,"SELECT Tytul FROM Wydatki WHERE Kwota = (SELECT MAX(Kwota) FROM Wydatki WHERE Kwota < (SELECT Max(Kwota) FROM Wydatki))");
+
+    if(!qstate) // nonzero
+    {
+        res = mysql_store_result(conn);
+        while(row=mysql_fetch_row(res))
+        {
+
+            char *RWT2 = row[0];
+
+            SetWindowText(oknoRWT[2],RWT2);
+
+        }
+    }
+    else
+    {
+      cout<<"Nie wczytano Tytułu 2st Wydatku!"<<mysql_error(conn);
+    }
+    }
 }
 void time()
 {
