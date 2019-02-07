@@ -294,7 +294,16 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
                         for(int i=0;i<zd.length();i++)
                         {
                             if((zmiana[i]>='0' && zmiana[i]<='9') || zmiana[i] == '.')
-                                sprawdz = TRUE;
+                                for(int i=0;i<10;i++)
+                                {
+                                    for(int j=0;j<10;j++)
+                                    {
+                                        if(zmiana[i] && zmiana[j] == '.')
+                                            break;
+                                        else
+                                            sprawdz = TRUE;
+                                    }
+                                }
 
                             else
                                 sprawdz = FALSE;
@@ -305,8 +314,7 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
                             {
                             string zd(zmiana);
                             string td(tytul);
-                            cout <<zd<<endl;
-                            cout <<td<<endl;
+
                             ss.str(string());
                             ss<<"INSERT into Dochody(Kwota,Tytul,Data) Values("+zd+",\""+td+"\", NOW());";
                             string query = ss.str();
@@ -355,7 +363,17 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
                         for(int i=0;i<zd.length();i++)
                         {
                             if((zmiana[i]>='0' && zmiana[i]<='9') || zmiana[i] == '.')
-                                sprawdz = TRUE;
+                                for(int i=0;i<10;i++)
+                                {
+                                    for(int j=0;j<10;j++)
+                                    {
+                                        if(zmiana[i] && zmiana[j] == '.')
+                                            break;
+                                        else
+                                            sprawdz = TRUE;
+                                    }
+                                }
+
 
                             else
                                 sprawdz = FALSE;
@@ -398,14 +416,34 @@ LRESULT CALLBACK WindowProcedure(HWND hWnd,UINT msg,WPARAM wp,LPARAM lp)
 
                 case WYCZYSC_PORTFEL:
                     int wynik;
-                    wynik = MessageBox(hWnd,"Czy napewno chcesz wyczyscic portfel?\nSpowoduje to usuniecie wszystkich danych!","Kalkulator wydatkow",MB_YESNO);
+                    wynik = MessageBox(hWnd,"Czy napewno chcesz wyczyscic portfel?\nSpowoduje to usuniecie wszystkich danych!\nPo czyszczeniu nalezy zrestartowac aplikacje.","Kalkulator wydatkow",MB_YESNO);
                     if(wynik == IDYES)
                     {
                         portfel_f = 0;
                         sprintf(portfel,"%.2f",portfel_f);
                         SetWindowText(hStan, portfel);
+                        for(int i=0;i<5;i++)
+                        {
+                            SetWindowText(oknoD[i],NULL);
+                            SetWindowText(oknoTD[i],NULL);
+                            SetWindowText(oknoW[i],NULL);
+                            SetWindowText(oknoTW[i],NULL);
+                            SetWindowText(hWartosc,NULL);
+                            SetWindowText(hTytul,NULL);
+                        }
+
                         qstate = mysql_query(conn,"UPDATE Portfel SET Stan = 0");
+                        qstate = mysql_query(conn,"DELETE FROM Dochody");
+                        qstate = mysql_query(conn,"DELETE FROM Wydatki");
+                        remove("0Dochody.txt");
+                        remove("0Dochody Historia.txt");
+                        remove("0Dochody Tytuly Historia.txt");
+                        remove("0Wydatki.txt");
+                        remove("0Wydatki Historia.txt");
+                        remove("0Wydatki Tytuly Historia.txt");
+
                         mysql_close(conn);
+
 //                        conn = mysql_init(0);
 //                        conn = mysql_real_connect(conn,server,username,password,dataBaseName,port,NULL,0);
 
@@ -466,11 +504,6 @@ void DodajMenu(HWND hWnd)
     HMENU hRankingW = CreateMenu();
 
     AppendMenu(hMenuPlikow,MF_STRING,WYCZYSC_PORTFEL,"Wyczysc");
-
-//    AppendMenu(hDrugieMenu,MF_POPUP,(UINT_PTR)hRankingW,"Wydatki");
-//
-//    AppendMenu(hDrugieMenu,MF_POPUP,(UINT_PTR)hRankingD,"Dochody");
-
 
     AppendMenu(hMenuPlikow,MF_SEPARATOR,NULL,NULL);
 
@@ -818,9 +851,9 @@ void registerOsiagiClass(HINSTANCE hInst)
 
 void PokazOsiagi(HWND hWnd)
 {
-    HWND hOsiagi = CreateWindowW(L"MojaOsiagiKlasa",L"OSIAGNIECIA", WS_VISIBLE | WS_OVERLAPPEDWINDOW, 400, 100, 1000, 800, hWnd, NULL, NULL, NULL);
+    HWND hOsiagi = CreateWindowW(L"MojaOsiagiKlasa",L"OSIAGNIECIA", WS_VISIBLE | WS_OVERLAPPEDWINDOW, 100, 100,1000, 275, hWnd, NULL, NULL, NULL);
 
-    CreateWindowW(L"Button",L"Zamknij", WS_VISIBLE | WS_CHILD,870,720,100,40, hOsiagi,(HMENU)1,NULL,NULL);
+    CreateWindowW(L"Button",L"Zamknij", WS_VISIBLE | WS_CHILD,870,190,100,40, hOsiagi,(HMENU)1,NULL,NULL);
     portfel_f = atof(portfel);
 
 
@@ -1180,6 +1213,7 @@ void BazaPokazDochody()
 
         qstate = mysql_query(conn,"SELECT MAX(Kwota) FROM Dochody WHERE Kwota < (SELECT Max(Kwota) FROM Dochody)");
 
+}
 }
 void BazaRanking()
 {
